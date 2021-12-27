@@ -7,19 +7,28 @@ done
 -------
 b. Delete the zero sized file
 
-#!/bin/bash
-echo "Enter any file name: "
-read filenm
-if [ -e $filenm ]
+#! /bin/bash
+
+# Taking directory name as input from user
+echo -n "Enter name of the directory : "
+read directory_name
+
+# If directory exists it will print 
+# Directory exits 
+# and remove the zero-sized files.
+# Or if directory doesn't exists it will print 
+# Directory does not exists.
+if [ -d "$directory_name" ];
 then
-    echo $filenm" File exist"if [ -s $filenm ]
-    then
-        echo $filenm" File has size > 0"else
-        rm $filenm
-        echo $filenm" File is Deleted which has size = 0"
-    fi
+    echo "Directory exist"
+        for i in `find $directory_name -size 0`
+        do
+            rm $i    
+            echo "Zero-sized files are Successfully deleted"    
+        done
 else
-    echo "File not exist"
+    echo "Directory does not exist"
+
 fi
 ----
 Take an input file and remove identical lines (or duplicate lines from the file)
@@ -382,6 +391,124 @@ int main(){
     insert(np);
     disp(np,1);
     return 0;
+}
+----
+SJF (preemptive):-
+#include <iostream>
+#include <algorithm>
+#include <cstring>
+using namespace std;
+
+typedef struct proccess
+{
+	int at,bt,ct,ta,wt,btt;
+	string pro_id;
+
+		/*
+	artime = Arrival time,
+	bt = Burst time,
+	ct = Completion time,
+	ta = Turn around time,
+	wt = Waiting time
+	*/
+
+}Schedule;
+
+bool compare(Schedule a,Schedule b)
+{
+	return a.at<b.at;
+
+	/* This Schedule will always return TRUE
+	if above condition comes*/
+}
+bool compare2(Schedule a,Schedule b)
+{
+	return a.bt<b.bt;
+
+	/* This Schedule will always return TRUE
+	if above condition comes*/
+}
+
+int main()
+{
+	Schedule pro[10];
+	//An array of Processes
+	int n,i,j,pcom;
+	//n = number of processes, i= iteration variable
+
+	cout<<"Enter the number of Process::";
+	cin>>n;
+
+	cout<<"Enter the Process id arrival time burst time :::";
+
+	for(i=0;i<n;i++)
+	{
+		cin>>pro[i].pro_id;
+		cin>>pro[i].at;
+		cin>>pro[i].bt;
+		pro[i].btt=pro[i].bt;
+	}
+
+	sort(pro,pro+n,compare);
+
+	/*sort is a predefined funcion  defined in algorithm.h header file,
+	it will sort the processes according to their arrival time*/
+
+	i=0;
+	pcom=0;
+	while(pcom<n)
+	{
+		for(j=0;j<n;j++)
+		{
+			if(pro[j].at>i)
+			break;
+		}
+
+		sort(pro,pro+j,compare2);
+
+		/*sort is a predefined funcion  defined in algorithm.h header file,
+	it will sort the processes according to their burst time*/
+
+		if(j>0)
+		{
+
+			for(j=0;j<n;j++)
+			{
+				if(pro[j].bt!=0)
+				break;
+			}
+			if(pro[j].at>i)
+
+			{
+				i=pro[j].at;
+
+			}
+			pro[j].ct=i+1;
+			pro[j].bt--;
+		}
+		i++;
+		pcom=0;
+		for(j=0;j<n;j++)
+		{
+			if(pro[j].bt==0)
+			pcom++;
+		}
+	}
+
+	cout<<"ProID\tAtime\tBtime\tCtime\tTtime\tWtime\n";
+
+	for(i=0;i<n;i++)
+	{
+		pro[i].ta=pro[i].ct-pro[i].at;
+		pro[i].wt=pro[i].ta-pro[i].btt;
+
+		/*Printing the Process id, arrival time, burst time,
+		completion time, turn around time, waiting time*/
+
+		cout<<pro[i].pro_id<<"\t"<<pro[i].at<<"\t"<<pro[i].btt<<"\t"<<pro[i].ct<<"\t"<<pro[i].ta<<"\t"<<pro[i].wt;
+		cout<<endl;
+	}
+	return 0;
 }
 ----
 SJF(Non-Preemptive) Algorithm:-
@@ -1082,582 +1209,417 @@ int main()
 }
 ----
 // Banker's Algorithm
+#include <stdio.h>
+#include <stdlib.h>
+
+void final_output(int k[][10], int n, int p)
+{
+	int i, j;
+	for (i = 0; i < n; i++)
+	{
+		printf("\n");
+		for (j = 0; j < p; j++)
+		{
+			printf("%d\t", k[i][j]);
+		}
+	}
+}
+
+void Banker(int A[][10], int N[][10],
+	int M[10][10], int W[1][10], int *n, int *m)
+{
+	int i, j;
+	printf("\n Enter total number of processes : ");
+	scanf("%d", n);
+	printf("\n Enter total number of resources : ");
+	scanf("%d", m);
+	for (i = 0; i<*n; i++)
+	{
+		printf("\n Process %d\n", i + 1);
+		for (j = 0; j<*m; j++)
+		{
+			printf(" Allocation for resource %d : ", j + 1);
+			scanf("%d", &A[i][j]);
+			printf(" Maximum for resource %d : ", j + 1);
+			scanf("%d", &M[i][j]);
+		}
+	}
+
+	printf("\n Available resources : \n");
+	for (i = 0; i<*m; i++)
+	{
+		printf(" Resource %d : ", i + 1);
+		scanf("%d", &W[0][i]);
+	}
+
+	for (i = 0; i<*n; i++)
+		for (j = 0; j<*m; j++)
+			N[i][j] = M[i][j] - A[i][j];
+	printf("\n -----Allocation Matrix-----");
+	final_output(A, *n, *m);
+	printf("\n -----Maximum Requirement Matrix-----");
+	final_output(M, *n, *m);
+	printf("\n -----Need Matrix-----");
+	final_output(N, *n, *m);
+}
+
+int safety(int A[][10], int N[][10],
+	int B[1][10], int n, int m, int a[])
+{
+	int i, j, k, x = 0, f1 = 0, f2 = 0;
+	int F[10], W[1][10];
+	for (i = 0; i < n; i++)
+		F[i] = 0;
+	for (i = 0; i < m; i++)
+		W[0][i] = B[0][i];
+	for (k = 0; k < n; k++)
+	{
+		for (i = 0; i < n; i++)
+		{
+			if (F[i] == 0)
+			{
+				f2 = 0;
+				for (j = 0; j < m; j++)
+				{
+					if (N[i][j] > W[0][j])
+						f2 = 1;
+				}
+
+				if (f2 == 0 && F[i] == 0)
+				{
+					for (j = 0; j < m; j++)
+						W[0][j] += A[i][j];
+					F[i] = 1;
+					f1++;
+					a[x++] = i;
+				}
+			}
+		}
+
+		if (f1 == n)
+			return 1;
+	}
+
+	return 0;
+}
+
+void request(int A[10][10], int N[10][10], int B[10][10], int pid, int K)
+{
+	int rmat[1][10];
+	int i;
+	printf("\n Enter additional request : \n");
+	for (i = 0; i < K; i++)
+	{
+		printf(" Request for resource %d : ", i + 1);
+		scanf("%d", &rmat[0][i]);
+	}
+
+	for (i = 0; i < K; i++)
+		if (rmat[0][i] > N[pid][i])
+		{
+			printf("\n ***Error encountered***\n");
+			exit(0);
+		}
+
+	for (i = 0; i < K; i++)
+		if (rmat[0][i] > B[0][i])
+		{
+			printf("\n ***Resources unavailable**\n");
+			exit(0);
+		}
+
+	for (i = 0; i < K; i++)
+	{
+		B[0][i] -= rmat[0][i];
+		A[pid][i] += rmat[0][i];
+		N[pid][i] -= rmat[0][i];
+	}
+}
+
+int banker(int A[][10], int N[][10],
+	int W[1][10], int n, int m)
+{
+	int j, i, a[10];
+	j = safety(A, N, W, n, m, a);
+	if (j != 0)
+	{
+		printf("\n\n");
+		printf("\n A safety sequence has been "
+			"detected.\n");
+		for (i = 0; i < n; i++)
+			printf(" P%d ", a[i]);
+		printf("\n");
+		return 1;
+	}
+	else
+	{
+		printf("\n Deadlock has occured.\n");
+		return 0;
+	}
+}
+
+int main()
+{
+	int All[10][10], Max[10][10], Need[10][10], W[1][10];
+	int n, m, pid, c, r;
+	printf("\n -----BANKER'S ALGORITHM-----\n");
+	Banker(All, Need, Max, W, &n, &m);
+	r = banker(All, Need, W, n, m);
+	if (r != 0)
+	{
+		printf("\n Do you want to continue?");
+		scanf("%d", &c);
+		if (c == 1)
+		{
+			printf("\n Enter process number : ");
+			scanf("%d", &pid);
+			request(All, Need, W, pid - 1, m);
+			r = banker(All, Need, W, n, m);
+			if (r == 0)
+			{
+				exit(0);
+			}
+		}
+	}
+	else
+		exit(0);
+	return 0;
+}
+----
+//Banker Algorithm1
+// Banker's Algorithm
 #include <iostream>
 using namespace std;
 
-int* grant_req(int m,int avail[])
-{
-			int req[m],flag=0;
-			cout<<"Enter resource request:\n";
- 			for(int j=0;j<m;j++)
- 				cin>>req[j];
- 			
-			cout<<"\nAvailable resources:\n";
- 			for(int j=0;j<m;j++)
- 				cout<<avail[j];
- 			cout<<"\n";	
- 			
-			for (int j = 0; j < m; j++) 
-			{
-            	if (req[j] > avail[j])
-				{
-            		flag++;
-            		break;
-          		}
-        	}
-        	if(flag!=0)
-        		cout<<"Request denied due to insufficient resources.\n";
-        	else
-        		cout<<"Request granted..!!\n";
-        	
-        return req;
-}
-		
 int main()
 {
-    // P0, P1, P2, P3, P4 are the Process names here
-  
-  int n, m, i, j, k;
-  cout<<"<----------Banker's Alogrithm---------->\n\n";
-  cout<<"Enter no of processes(n) :";
-  cin>>n;
-  cout<<"Enter no of resources(m) :";
-  cin>>m;
-  int alloc[n][m] ;
-  int max[n][m];
-  int avail[m]; 
- 
- 	for( i=0;i<n;i++){
-	 cout<<"Enter allocated instances for process P"<<i+1<<" :\n";
- 		for( j=0;j<m;j++){
- 			cin>>alloc[i][j];
-		 }
+	// P0, P1, P2, P3, P4 are the Process names here
+
+int n, m, i, j, k;
+n = 5; // Number of processes
+m = 3; // Number of resources
+int alloc[5][3] = { { 0, 1, 0 }, // P0 // Allocation Matrix
+					{ 2, 0, 0 }, // P1
+					{ 3, 0, 2 }, // P2
+					{ 2, 1, 1 }, // P3
+					{ 0, 0, 2 } }; // P4
+
+int max[5][3] = { { 7, 5, 3 }, // P0 // MAX Matrix
+				{ 3, 2, 2 }, // P1
+				{ 9, 0, 2 }, // P2
+				{ 2, 2, 2 }, // P3
+				{ 4, 3, 3 } }; // P4
+
+int avail[3] = { 3, 3, 2 }; // Available Resources
+
+int f[n], ans[n], ind = 0;
+for (k = 0; k < n; k++) {
+	f[k] = 0;
+}
+int need[n][m];
+for (i = 0; i < n; i++) {
+	for (j = 0; j < m; j++)
+	need[i][j] = max[i][j] - alloc[i][j];
+}
+int y = 0;
+for (k = 0; k < 5; k++) {
+	for (i = 0; i < n; i++) {
+	if (f[i] == 0) {
+
+		int flag = 0;
+		for (j = 0; j < m; j++) {
+		if (need[i][j] > avail[j]){
+			flag = 1;
+			break;
+		}
+		}
+
+		if (flag == 0) {
+		ans[ind++] = i;
+		for (y = 0; y < m; y++)
+			avail[y] += alloc[i][y];
+		f[i] = 1;
+		}
 	}
-	cout<<endl;
-	for( i=0;i<n;i++){
-	 cout<<"Enter maximum instances for process P"<<i+1<<" :\n";
- 		for( j=0;j<m;j++){
- 			cin>>max[i][j];
-		 }
 	}
-	
-	
-	 cout<<"Enter available instances:\n";
- 		for( j=0;j<m;j++){
- 			cin>>avail[j];
-		 }
-	cout<<endl;
-  
-  int ch,cnt=0;
-  	cout<<"Do you want to make request for resorces(1/0)?\n";
-  	cin>>ch;
-  	cout<<"Requesting process no.:";
-  	cin>>cnt;
-  	if(ch==1)
-  	{
-		int*req=grant_req(m,avail);
-  		for (int j = 0; j < m; j++)
-	    {
-			alloc[cnt-1][j]=alloc[cnt-1][j]+req[j];
-	        avail[j]=avail[j]-req[j];
-		}	
-	}
-	cout<<"\nNow available resources are :\n";
- 	for(int j=0;j<m;j++)
- 		cout<<avail[j]<<"\t"; 
- 		
-  int f[n]={0}, ans[n]={0}, ind = 0;
-  /*for (k = 0; k < n; k++) {
-    f[k] = 0;
-  }*/
-  //need matrix
-  int need[n][m];
-  for (i = 0; i < n; i++) {
-    for (j = 0; j < m; j++)
-      need[i][j] = max[i][j] - alloc[i][j];
-  }
-  
- cout<<"\n\nNeed Matrix :\n\n";
-			  cout<<"\t";
-			  for(i=0;i<m;i++)
-			  {
-			  	cout<<"R"<<i+1<<"\t";
-			  }
-			  cout<<endl;
-			  for (i = 0; i < n; i++) {
-			  	cout<<"P"<<i+1<<"\t";
-			    for (j = 0; j < m; j++)
-			      cout<<need[i][j]<<"\t"; 
-			    cout<<"\n";
-			  }
-  
-  int y = 0;
-  for (k = 0; k < n; k++) {
-    for (i = 0; i < n; i++) {
-      if (f[i] == 0) {
-  
-        int flag = 0;
-        for (j = 0; j < m; j++) {
-          if (need[i][j] > avail[j]){
-            flag = 1;
-            break;
-          }
-        }
-  
-        if (flag == 0) {
-          ans[ind++] = i;
-          for (y = 0; y < m; y++)
-            avail[y] += alloc[i][y];
-          f[i] = 1;
-        }
-      }
-    }
-  }
-  
-	cout << "Following is the SAFE Sequence" << endl;
-	for (i = 0; i < n - 1; i++)
-		cout << " P" << ans[i] << " ->";
-	cout << " P" << ans[n - 1] <<endl;
-  
-  	//else
-  	//	exit(0);
-  	cout<<"\nFinally available resources are :\n";
- 	for(int j=0;j<m;j++)
- 		cout<<avail[j]<<"\t";
-    
+}
+
+cout << "Following is the SAFE Sequence" << endl;
+for (i = 0; i < n - 1; i++)
+	cout << " P" << ans[i] << " ->";
+cout << " P" << ans[n - 1] <<endl;
+
+	return (0);
 }
 ----
 Barber Program:-
-
-
-#include <iostream>
-#include <cstdlib>
-#include <pthread.h>
-#include <sstream>
-#include <stdio.h>
-#include <semaphore.h>
-#include <mutex>
-
-using namespace std;
-
-//initialize the waiting room - max 25 customers
-int waitingRoom[25];
-
-//make the first index 0 for fill and use
-//this tells where in the waiting room to put and remove people from
-int addToLine = 0;
-int removeFromLine  = 0;
-
-//this semaphore is for the waiting room chairs.
-//there should be as many resources as there are chairs
-sem_t emptyChairs;
-
-//there should be a semaphore for full chairs
-//it should start at 0
-sem_t fullChairs;
-
-//this is a mutex lock for the waiting room
-pthread_mutex_t waitMutex = PTHREAD_MUTEX_INITIALIZER;
-
-
-//this is for the cout function. there should only be one (mutex).
-//it makes cout legible
-pthread_mutex_t coutMutex = PTHREAD_MUTEX_INITIALIZER;
-
-//create struct to pass to thread functions
-struct thread_details{
-    //the thread id
-    int threadID;
-
-    //the total number of threads
-    int totalCustomers;
-};
-
-//join the line
-void joinLine(int id){
-    //add that thread id to the line
-    waitingRoom[addToLine] = id;
-
-    //increment fill
-    addToLine++;
-
-}
-
-//get a haircut
-int getHaircut(){
-
-    // this person is getting a haircut
-    int id = waitingRoom[removeFromLine];
-
-    //increment use
-    removeFromLine++;
-
-    //return the user who got the haircut
-    return id;
-
-}
-
-void *GoToWork(void *customer_info){
-
-    struct thread_details *p = (struct thread_details*) customer_info;
-
-    //the barber is always sleeping at first
-    pthread_mutex_lock(&coutMutex);
-    cout << "The barber is sleeping. \n";
-    pthread_mutex_unlock(&coutMutex);
-
-    //for every customer, be in this loop
-    for(int i = 0; i < p->totalCustomers; i++){
-
-        //and wait for someone to show up
-        sem_wait(&fullChairs);
-
-        pthread_mutex_lock(&waitMutex);
-
-        int customerID = getHaircut();
-
-        //then get their hair cut hair
-        pthread_mutex_lock(&coutMutex);
-        cout << "The barber is cutting hair. \n";
-        pthread_mutex_unlock(&coutMutex);
-
-        pthread_mutex_unlock(&waitMutex);
-
-        //which frees up a chair
-        sem_post(&emptyChairs);
-
-        //and that customer leaves
-        pthread_mutex_lock(&coutMutex);
-        cout << "Customer " << customerID << " is leaving the barber shop. \n";
-        pthread_mutex_unlock(&coutMutex);
-
-        //if there is a full chair
-        int numFullChairs;
-        sem_getvalue(&fullChairs, &numFullChairs);
-        if(numFullChairs == 0){
-            //the barber is sleeping
-            pthread_mutex_lock(&coutMutex);
-            cout << "The barber is sleeping. \n";
-            pthread_mutex_unlock(&coutMutex);
-        }
-    }
-
-    return NULL;
-}
-
-
-void *VisitBarber(void *customer_info){
-    //*p is a pointer to this thread_details
-    struct thread_details *p = (struct thread_details*) customer_info;
-    pthread_mutex_lock(&coutMutex);
-    cout << "Customer " << p->threadID <<" arrived at the barber shop.\n";
-    pthread_mutex_unlock(&coutMutex);
-
-
-    //if you can, take a seat
-    sem_wait(&emptyChairs);  //empty chairs decreases by one
-
-    //now add the user to the waiting room
-    pthread_mutex_lock(&waitMutex);
-    joinLine(p->threadID);
-
-    pthread_mutex_lock(&coutMutex);
-    cout << "Customer " << p->threadID << " took a seat in the waiting room.\n";
-    pthread_mutex_unlock(&coutMutex);
-
-
-    pthread_mutex_unlock(&waitMutex);
-    sem_post(&fullChairs);
-
-    int numFullChairs;
-    sem_getvalue(&fullChairs, &numFullChairs);
-
-    //if nobody is in the waiting room, wake up the barber
-    if(numFullChairs == 1){
-        pthread_mutex_lock(&coutMutex);
-        cout << "Customer " << p->threadID << " woke up the barber. \n";
-        pthread_mutex_unlock(&coutMutex);
-    }
-
-    return NULL;
-}
-
-
-
-int main() {
-
-
-    //introduce the program
-    cout << "<----------Welcome to the barber shop!---------->\n";
-
-    //declare customers - 26 so it enters the while loop to get input
-    int customerCount = 26;
-
-    //get the number of customers - must be between 0 and 25
-    while (customerCount > 25 || customerCount <= 0) {
-        cout << "How many customers are there?\n"
-                "There must be between 0 and 25 customers.\n";
-        cin >> customerCount;
-
-        //if the customercount is still invalid
-        if (customerCount > 25 || customerCount < 0) {
-            cout << "Sorry, you entered ";
-            cout << customerCount;
-            cout << " which is not between 0 and 25.\n";
-        }
-    }
-
-    //declare waiting chairs
-    int numChairs;
-    cout << "How many chairs are there in the waiting room? \n";
-    cin >> numChairs;
-
-    //this semaphor is for the empty waiting room chairs.
-    // there should be as many resources as there are chairs
-    sem_init(&emptyChairs, 0, numChairs);
-
-    //this semaphor is for the full waiting room chairs.
-    sem_init(&fullChairs, 0, 0);
-
-    //create thread ids
-    pthread_t *threads = new pthread_t[customerCount];
-    pthread_t barberThread;
-
-    //create an int to determine if thread creation was successful
-    int errorCheck;
-
-    //create thread attributes
-    pthread_attr_t attribute;
-
-    //status of the thread
-    void *status;
-
-    //initialize and set thread joinable
-    pthread_attr_init(&attribute);
-    pthread_attr_setdetachstate(&attribute, PTHREAD_CREATE_JOINABLE);
-
-    //create an array of structs to pass to threads
-    thread_details *allThreads = new thread_details[customerCount];
-
-    //create struct to pass to barber thread
-    thread_details *barberInfo;
-
-    thread_details tempStruct;
-    tempStruct.totalCustomers = customerCount;
-    tempStruct.threadID = 666; //a random id so I can use this struct
-
-    //set up a pointer to point to it
-    barberInfo = &tempStruct;
-
-    //create barber thread
-    pthread_create(&barberThread, &attribute, &GoToWork, (void *) barberInfo);
-
-
-    //create customer threads
-    for (int i = 0; i < customerCount; i++) {
-        //create struct to pass info to VisitBarber
-        allThreads[i].totalCustomers = customerCount;
-        allThreads[i].threadID = i;
-
-        //create a pointer to be sent to the thread
-        thread_details *tempThread;
-
-        //assign pointer to the correct struct in allThreads
-        tempThread = &allThreads[i];
-
-        //thread creation = leaving for the barber shop
-        pthread_mutex_lock(&coutMutex);
-        cout << "Customer " << i << " is leaving for the barber shop.\n";
-        pthread_mutex_unlock(&coutMutex);
-
-        //create the thread
-        errorCheck = pthread_create(&threads[i], &attribute, &VisitBarber, (void *)tempThread);
-
-        //check that the threads were created
-        if (errorCheck) {
-            cout << "Error: unable to create thread " << errorCheck << endl;
-            exit(-1);
-        }
-    }
-
-    //free the attribute and wait for other threads
-    pthread_attr_destroy(&attribute);
-
-    //make an int for results
-    int results;
-
-    //join the threads
-    for (int i = 0; i < customerCount; i++){
-        //this waits for all the results to be completed
-        results = pthread_join(threads[i], &status);
-
-        if (results){
-            cout << "Error:unable to join," << results << endl;
-            exit(-1);
-        }
-
-    }
-
-    //tell the user the program is over.
-    cout << "The barber is going home for the day. " << endl;
-
-    //clear things out and end!
-    cout.flush();
-    pthread_exit(NULL);
-
-}
-----
-Barber Program C:-
-The Sleeping Barber
-*/
-
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <time.h>
 #include <pthread.h>
 #include <semaphore.h>
 
-void barber();   // barber thread function
-void customer(); //customer thread function
-                               
-sem_t seatMutex;        // Semaphore for the waiting room
-sem_t customers;        // Semaphore for customers currently in the waiting room ready to be served
-sem_t smfBarber;        // Semaphore for the barber
+// The maximum number of customer threads.
+#define MAX_CUSTOMERS 25
 
-int runningTime;        // Total time in seconds that the main thread will work
-int numberOfFreeSeats;  // Capacity of the waiting room
-int customersCount;     // Number of customers in the program that will come to the shop
-int customerWait;       // Maximum time a customer would wait to come again to the shop
-int getHCn;             // Number of customers who get haircut
+// Function prototypes…
+void *customer(void *num);
+void *barber(void*);
 
-pthread_t barberThread;           // Barber's thread
-pthread_t customersThreads[20];   // An array of customer threads with max size of 20 
+void randwait(int secs);
 
-// Main method of the code                    
-int main() {
+// Define the semaphores.
 
-    printf("Enter the running time of the program: ");
-    scanf("%d",&runningTime);
-    printf("Enter the number of free seats: ");
-    scanf("%d",&numberOfFreeSeats);
-    printf("Enter the customers count: ");
-    scanf("%d",&customersCount);
-    printf("Enter the maximun waiting time for the customer to come again: ");
-    scanf("%d",&customerWait);
-    
-    getHCn = 0;   
-   
-    printf("\nProgram is beginning\n\n");
-   
-    // Initializing semaphores:
-    // zero indicates that this semaphore is not allowed to be shared between processes, 1 is an initial value
-    sem_init(&seatMutex,0,1); // the initial value is 1 because we need to allow only one thread to access
-    sem_init(&customers,0,0);
-    sem_init(&smfBarber,0,0);
-   
-    // Creating barber thread:
-    pthread_create(&barberThread, NULL, barber, NULL); // barber is the function which the thread will start at
-    printf("Barber has been created.\n");
-    
-    // Creating customers threads:
-    for (int i = 0; i < customersCount; i++){
-	   pthread_create(&customersThreads[i], NULL, customer, NULL); // customer is the function which the thread will start at
-	   printf("Customer %u has been created.\n",customersThreads[i]);
-    }
-   
-    // stop the main thread in order to run the other threads
-    sleep(runningTime);
-     
-    printf("\n\nEnd of the day :)\n");
-    printf("%d out of %d customers get haircut.",getHCn,customersCount);
-    exit(0);
+// waitingRoom Limits the # of customers allowed
+// to enter the waiting room at one time.
+sem_t waitingRoom;
+
+// barberChair ensures mutually exclusive access to
+// the barber chair.
+sem_t barberChair;
+
+// barber_sleep is used to allow the barber to sleep
+// until a customer arrives.
+sem_t barber_sleep;
+
+// seatBelt is used to make the customer to wait until
+// the barber is done cutting his/her hair.
+sem_t seatBelt;
+
+// Flag to stop the barber thread when all customers
+// have been serviced.
+int allDone = 0;
+
+int main(int argc, char *argv[])
+{
+	pthread_t btid;
+	pthread_t tid[MAX_CUSTOMERS];
+	long RandSeed;
+	int i, numCustomers, numChairs;
+	int Number[MAX_CUSTOMERS];
+
+	printf("Enter the number of Custmors : ");
+	scanf("%d", &numCustomers);
+	printf("Enter the number of Charis : ");
+	scanf("%d", &numChairs);
+
+	// Make sure the number of threads is less than the number of
+	// customers we can support.
+	if (numCustomers > MAX_CUSTOMERS)
+	{
+		printf("The maximum number of Customers is %d.\n", MAX_CUSTOMERS);
+		exit(-1);
+	}
+
+	// Initialize the numbers array.
+	for (i = 0; i < MAX_CUSTOMERS; i++)
+	{
+		Number[i] = i;
+	}
+
+	// Initialize the semaphores with initial values…
+	sem_init(&waitingRoom, 0, numChairs);
+	sem_init(&barberChair, 0, 1);
+	sem_init(&barber_sleep, 0, 0);
+	sem_init(&seatBelt, 0, 0);
+
+	// Create the barber.
+	pthread_create(&btid, NULL, barber, NULL);
+
+	// Create the customers.
+	for (i = 0; i < numCustomers; i++)
+	{
+		pthread_create(&tid[i], NULL, customer, (void*) &Number[i]);
+		sleep(1);
+	}
+
+	// Join each of the threads to wait for them to finish.
+	for (i = 0; i < numCustomers; i++)
+	{
+		pthread_join(tid[i], NULL);
+		sleep(1);
+	}
+
+	// When all of the customers are finished, kill the
+	// barber thread.
+	allDone = 1;
+	sem_post(&barber_sleep);	// Wake the barber so he will exit.
+	pthread_join(btid, NULL);
 }
 
-// barber thread function:
-void barber() {
-    int workingTime;    // Will be generated randomly to indicate the time
-                    // that the barber will take to cut a customer's hair
+void *customer(void *number)
+{
+	int num = *(int*) number;
 
-    while(1) {
-        //===== ENTRY SECTION =====//
-       
-        // acquire customers to wait for a customer 
-	    sem_wait(&customers);
-        // acquire seatMutex to access seats count  
-	    sem_wait(&seatMutex);
+	// Leave for the shop and take some random amount of
+	// time to arrive.
+	printf("Customer %d leaving for barber shop.\n", num);
+	randwait(2);
+	printf("Customer %d arrived at barber shop.\n", num);
 
-	    //===== CRITICAL SECTION =====//
-	  
-        // increase the number of free seats
-	    numberOfFreeSeats += 1;
-	  
-	    // generate random time between 1-5 seconds for the period of haircut.  
-	    workingTime = (rand() % 5) + 1;
-	    printf("Barber took a new customer, and he will take %d seconds for haircut.\n",workingTime);
-	  
-	    printf("\tNumber of free seats: %d\n",numberOfFreeSeats);
-	    //===== EXIT SECTION =====//
-	  
-        // signal to customer which mean barber is ready  
-	    sem_post(&smfBarber);
-        // release lock on seat count 
-	    sem_post(&seatMutex);
-   	    sleep(workingTime);
-    } 
+	// Wait for space to open up in the waiting room…
+	sem_wait(&waitingRoom);
+	printf("Customer %d entering waiting room.\n", num);
+
+	// Wait for the barber chair to become free.
+	sem_wait(&barberChair);
+
+	// The chair is free so give up your spot in the
+	// waiting room.
+	sem_post(&waitingRoom);
+
+	// Wake up the barber…
+	printf("Customer %d waking the barber.\n", num);
+	sem_post(&barber_sleep);
+
+	// Wait for the barber to finish cutting your hair.
+	sem_wait(&seatBelt);
+
+	// Give up the chair.
+	sem_post(&barberChair);
+	printf("Customer %d leaving barber shop.\n", num);
 }
 
-// customer thread function:
-void customer() {
-    int waitingTime;
-    int notEnd = 1;
-    while(notEnd == 1) {
-	    //===== ENTRY SECTION =====//
-	    
-        // acquire seatMutex to access seats count  
-	    sem_wait(&seatMutex);
-	    
-	    
-        // when there are no free seats 
-	    if(numberOfFreeSeats <= 0){
-	      
-		    //===== EXIT SECTION =====//
-		  
-	        // generate random time for waiting until next try
-	        waitingTime = (rand() % customerWait) + 1;
-		    printf("Customer %u left without haircut, and will come back after %d seconds to try again.\n", pthread_self(),waitingTime);
-		    sem_post(&seatMutex); // release the semaphore
-		    
-	        sleep(waitingTime);
-	    }
-	  
-	  
-        // when there are free seats 
-	    else{
-		  
-		    //===== CRITICAL SECTION =====//
-		   
-            // decrease the number of free seats 
-		    numberOfFreeSeats -= 1;
-		    printf("Customer %u is waiting.\n",pthread_self());
-		    printf("\tNumber of free seats: %d\n",numberOfFreeSeats);
-		   
-		    //===== EXIT SECTION =====//
-		    
-            // customer is ready 
-		    sem_post(&customers);
-            // release seatMutex lock on seat count 
-		    sem_post(&seatMutex);
-            // wait for barber 
-		    sem_wait(&smfBarber);
-            // get haircut 
-		    printf("Customer %u get a haircut :)\n",pthread_self());
-		    // the customer thread will end 
-		    notEnd = 0;
-		    // increse the number of customers who get haircut
-		    getHCn += 1;
-	    }
-      
-     }
+void *barber(void *junk)
+{
+	// While there are still customers to be serviced…
+	// Our barber is omnicient and can tell if there are
+	// customers still on the way to his shop.
+	while (!allDone)
+	{
+
+		// Sleep until someone arrives and wakes you..
+		printf("The barber is sleeping\n");
+		sem_wait(&barber_sleep);
+
+		// Skip this stuff at the end…
+		if (!allDone)
+		{
+
+			// Take a random amount of time to cut the
+			// customer’s hair.
+			printf("The barber is cutting hair\n");
+			randwait(2);
+			printf("The barber has finished cutting hair.\n");
+
+			// Release the customer when done cutting…
+			sem_post(&seatBelt);
+		}
+		else
+		{
+			printf("The barber is going home for the day.\n");
+		}
+	}
+}
+
+void randwait(int secs)
+{
+	int len;
+
+	// Generate a random number…
+	len = (int)((1 *secs) + 1);
+	sleep(len);
 }
 ----
 page replacement algorithm
